@@ -256,6 +256,17 @@ class TestHTTPClient(unittest.TestCase):
         for key in outargs:
             self.assertTrue(args[key] == outargs[key][0], "Key [%s] not found" % key)
 
+    def testGetHostPort(self):
+        http = httpclass.HTTPClient()
+        path = 'test'
+        url = "http://%s:%d/%s" % (BASEHOST,BASEPORT, path)
+        parsed = http.get_host_port(url)
+        #print(parsed)
+        url = 'http://google.com'
+        parsed = http.get_host_port(url)
+        #print(parsed)
+
+
     @classmethod
     def tearDownClass(self):        
         if (TestHTTPClient.httpd!=None):

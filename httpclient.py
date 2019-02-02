@@ -32,8 +32,12 @@ class HTTPResponse(object):
         self.code = code
         self.body = body
 
+
 class HTTPClient(object):
-    #def get_host_port(self,url):
+
+    def get_host_port(self,url):
+        parsed = urllib.parse.urlparse(url)
+        return {'host': parsed.hostname, 'port': parsed.port if parsed.port is not None else 80, 'path': parsed.path if parsed.path else '/'}
 
     def connect(self, host, port):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -41,13 +45,15 @@ class HTTPClient(object):
         return None
 
     def get_code(self, data):
-        return None
+        code = data.split(' ')[1]
+        return int(code)
 
     def get_headers(self,data):
         return None
 
     def get_body(self, data):
-        return None
+        body = data.split('\r\n')[-1]
+        return body
     
     def sendall(self, data):
         self.socket.sendall(data.encode('utf-8'))
@@ -61,15 +67,20 @@ class HTTPClient(object):
         done = False
         while not done:
             part = sock.recv(1024)
-            if (part):
-                buffer.extend(part)
-            else:
-                done = not part
+            if len(part) < 1024:
+                done = True
+            buffer.extend(part)
         return buffer.decode('utf-8')
 
     def GET(self, url, args=None):
-        code = 500
-        body = ""
+        parsedurl = self.get_host_port(url)
+        self.connect(parsedurl['host'], parsedurl['port'])
+        self.send_data = "GET {0} HTTP/1.1\r\nHost:{1}\r\nAccept: */*\r\n\r\n".format(parsedurl['path'], parsedurl['host'])
+        self.sendall(self.send_data)
+        buffer = self.recvall(self.socket)
+        code = self.get_code(buffer)
+        body = self.get_body(buffer)
+        self.close()
         return HTTPResponse(code, body)
 
     def POST(self, url, args=None):

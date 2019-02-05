@@ -85,8 +85,17 @@ class HTTPClient(object):
         return HTTPResponse(code, body)
 
     def POST(self, url, args=None):
-        code = 1
-        body = ''
+        if args is None:
+            post_data = ''
+        else:
+            post_data = urllib.parse.urlencode(args)
+        parsedurl = self.get_host_port(url)
+        self.connect(parsedurl['host'], parsedurl['port'])
+        self.send_data = "POST {0} HTTP/1.1\r\nHost:{1}\r\nAccept: */*\r\nConnection: close\r\nContent-Type: application/x-www-urlencoded\r\nContent-Length: {2}\r\n\r\n{3}".format(parsedurl['path'], parsedurl['host'], len(post_data), post_data)
+        self.sendall(self.send_data)
+        buffer = self.recvall(self.socket)
+        code = self.get_code(buffer)
+        body = self.get_body(buffer)
         return HTTPResponse(code, body)
 
     def command(self, url, command="GET", args=None):

@@ -52,11 +52,11 @@ class HTTPClient(object):
         return None
 
     def get_body(self, data):
-        body = data.split('\r\n')[-1]
+        body = data.split('\r\n\r\n')[1]
         return body
     
     def sendall(self, data):
-        self.socket.sendall(data.encode('utf-8'))
+        self.socket.sendall(bytes(data, 'utf-8'))
         
     def close(self):
         self.socket.close()
@@ -67,15 +67,16 @@ class HTTPClient(object):
         done = False
         while not done:
             part = sock.recv(1024)
-            if len(part) < 1024:
-                done = True
-            buffer.extend(part)
+            if (part):
+                buffer.extend(part)
+            else:
+                done = not part
         return buffer.decode('utf-8')
 
     def GET(self, url, args=None):
         parsedurl = self.get_host_port(url)
         self.connect(parsedurl['host'], parsedurl['port'])
-        self.send_data = "GET {0} HTTP/1.1\r\nHost:{1}\r\nAccept: */*\r\n\r\n".format(parsedurl['path'], parsedurl['host'])
+        self.send_data = "GET {0} HTTP/1.1\r\nHost:{1}\r\nAccept: */*\r\nConnection: close\r\n\r\n".format(parsedurl['path'], parsedurl['host'])
         self.sendall(self.send_data)
         buffer = self.recvall(self.socket)
         code = self.get_code(buffer)
@@ -84,8 +85,8 @@ class HTTPClient(object):
         return HTTPResponse(code, body)
 
     def POST(self, url, args=None):
-        code = 500
-        body = ""
+        code = 1
+        body = ''
         return HTTPResponse(code, body)
 
     def command(self, url, command="GET", args=None):

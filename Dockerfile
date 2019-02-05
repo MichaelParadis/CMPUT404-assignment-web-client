@@ -15,3 +15,7 @@ USER me
 WORKDIR /home/me
 # This is how we get your tests to run (arbitrary shell scripts)
 # ADD arb.sh /home/me/arb.sh
+COPY httpclient.py /home/me/httpclient.py
+ADD freetests.py /home/me/freetests.py
+ADD runner.sh /home/me/runner.sh
+RUN sh runner.sh
